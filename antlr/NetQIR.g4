@@ -1,49 +1,58 @@
 grammar NetQIR;
 
 // Reglas principales
-topLevel : (functionDefinition | declaration)+ EOF;
+topLevel : (functionDefinition | declarationDefinition)+ EOF;
 
-// Definiciones de funciones
-functionDefinition : 'define' returnType GLOBAL '(' paramList? ')' attributeBlock? '{' block* '}' ;
+// Function structure for definition and call
+function: returnType (GLOBAL | NETQIR) '(' argList? ')';
 
-declaration : 'declare' returnType GLOBAL '(' paramList? ')' ';' ;
+// Function and declaration definition
+functionDefinition : 'define' function attributeBlock? '{' block* '}' ;
+declarationDefinition : 'declare' returnType (GLOBAL | NETQIR) '(' declParamList? ')' ';' ;
 
-// Bloques y parámetros
+//
+// A function is composed by a block of statements. The block starts with a tag and contains a list of statements
+//
+
+// Block structure
 block : tag? statement+ ;
 tag : (IDENTIFIER | DIGIT+) ':' ;
 
-paramList : param (',' param)* ;
-param : (type modifier? | REGISTER | constant | INT | GLOBAL) (IDENTIFIER | REGISTER | GLOBAL)? ;
-
-statement 
-    : assignment
-    | functionCall
-    | allocation
-    | constant
-    | loadInstruction
-    | branchInstruction
-    | comparisonInstruction
-    | ';'
-    ;
-
-assignment : REGISTER '=' (functionCall | loadInstruction | comparisonInstruction | constant | GLOBAL) ;
-allocation : REGISTER '=' 'alloca' type (',' 'align' DIGIT+)? ;
-functionCall : 'call' type modifier? GLOBAL '(' argList? ')' ;
-
-loadInstruction : REGISTER '=' 'load' type ',' type REGISTER (',' 'align' DIGIT+)? ;
-branchInstruction : 'br' type (REGISTER | INT) ',' 'label' REGISTER ',' 'label' REGISTER ;
-comparisonInstruction : REGISTER '=' 'icmp' comparisonOp type REGISTER ',' (INT | REGISTER | constant | GLOBAL) ;
-
+// Arguments and parameters list for functions or declarations
 argList : arg (',' arg)* ;
 arg : (REGISTER) | (type modifier? (IDENTIFIER | REGISTER | GLOBAL | (INT | DIGIT))) ;
 
-// Constantes
+declParamList: declParam (',' declParam)* ;
+declParam : type modifier? ;
+
+// Composition of a statement
+statement 
+    : assignment
+    | noAssignmentInstruction
+    | ';'
+    ;
+
+// Assignment
+assignment : REGISTER '=' assignmentInstruction ;
+assignmentInstruction : (allocation | functionCall | loadInstruction | comparisonInstruction | constant | GLOBAL) ;
+noAssignmentInstruction : (branchUncondInstruction | branchCondInstruction | functionCall) ;
+
+// Instructions
+allocation : 'alloca' type (',' 'align' DIGIT+)? ;
+functionCall : 'call' function ;
+loadInstruction : 'load' type ',' type REGISTER (',' 'align' DIGIT+)? ;
+branchCondInstruction : 'br' type (REGISTER | INT) ',' 'label' REGISTER ',' 'label' REGISTER ;
+branchUncondInstruction: 'br' 'label' REGISTER ;
+comparisonInstruction : 'icmp' comparisonOp type REGISTER ',' (INT | REGISTER | constant | GLOBAL) ;
+
+
+// Constants
 constant : type modifier? INT ;
 
-// Tipos y atributos
+// Atributtes and types
 returnType : type modifier? | 'void' ;
 type : baseType pointer* ;
-baseType : 'i1' | 'i32' | 'ptr' | '%Comm' | '%Qubit' ;
+baseType : 'i1' | 'i32' | 'ptr' | '%Comm' | '%Qubit' | '%Group';
 pointer : '*' ;
 
 modifier : 'noundef' ;
@@ -53,8 +62,9 @@ attributeBlock : '#' DIGIT+ ;
 
 // Tokens
 IDENTIFIER : [a-zA-Z_][a-zA-Z_0-9]* ;
+NETQIR: '@__netqir__' IDENTIFIER ;
 REGISTER : '%' [a-zA-Z0-9]+ ;
-GLOBAL : '@' [a-zA-Z_][a-zA-Z_0-9]* ;
+GLOBAL : '@' IDENTIFIER ;
 DIGIT : [0-9] ;
 INT : DIGIT+ ;
 COMMENT : ';' ~[\r\n]* -> skip ;
