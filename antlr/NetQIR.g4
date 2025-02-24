@@ -43,7 +43,7 @@ functionCall : 'call' function ;
 loadInstruction : 'load' type ',' type REGISTER (',' 'align' DIGIT+)? ;
 branchCondInstruction : 'br' type (REGISTER | INT) ',' 'label' REGISTER ',' 'label' REGISTER ;
 branchUncondInstruction: 'br' 'label' REGISTER ;
-comparisonInstruction : 'icmp' comparisonOp type REGISTER ',' (INT | REGISTER | constant | GLOBAL) ;
+comparisonInstruction : 'icmp' comparisonOp type REGISTER ',' (DIGIT | INT | REGISTER | constant | GLOBAL) ;
 
 
 // Constants
@@ -63,6 +63,7 @@ attributeBlock : '#' DIGIT+ ;
 // Tokens
 IDENTIFIER : [a-zA-Z_][a-zA-Z_0-9]* ;
 NETQIR: '@__netqir__' IDENTIFIER ;
+QIR: '@__quantum__' IDENTIFIER ;
 REGISTER : '%' [a-zA-Z0-9]+ ;
 GLOBAL : '@' IDENTIFIER ;
 DIGIT : [0-9] ;
