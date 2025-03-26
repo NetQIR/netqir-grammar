@@ -18,10 +18,10 @@ include_directories(includes extern/antlr4-runtime)
 
 # Definir la librería netqir-grammar
 add_library(netqir-grammar STATIC
-        src/NetQIRLexer.cpp
-        src/NetQIRParser.cpp
-        src/NetQIRBaseListener.cpp
-        src/NetQIRListener.cpp
+        src/generated/NetQIRLexer.cpp
+        src/generated/NetQIRParser.cpp
+        src/generated/NetQIRBaseListener.cpp
+        src/generated/NetQIRListener.cpp
         src/AST/ASTNode.cpp
         src/AST/FunctionNode.cpp
         src/AST/StatementNode.cpp
